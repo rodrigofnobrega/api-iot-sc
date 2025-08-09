@@ -4,12 +4,14 @@ import com.ufrn.ppgti.iot_sc_api.contracts.HumiditySensorManager;
 import com.ufrn.ppgti.iot_sc_api.contracts.MotionSensorManager;
 import com.ufrn.ppgti.iot_sc_api.contracts.ProximitySensorManager;
 import com.ufrn.ppgti.iot_sc_api.contracts.TemperatureSensorManager;
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorAuthenticResponseDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Service
@@ -54,22 +56,16 @@ public class DeviceService {
         if (events.isEmpty()) {
             throw new IllegalStateException("Evento de registro de movimento não encontrado!");
         }
+
         HumiditySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0); // Pega o primeiro evento da lista
 
-        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
-        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
-        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
-
-
-        log.info("Evento SensorRegistered capturado:");
-        log.info("  -> UID: {}", eventResponse.uid);
-        log.info("  -> MAC Address: {}", eventResponse.macAddress);
-        log.info("  -> Tipo de Medida: {}", eventResponse.measurementType);
-        log.info("  -> Registrado em: {}", registeredAt);
-        log.info("  -> Expira em: {}", expiresAt);
-
-        return new SensorRegisterResponseDto(eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType,
-                registeredAt,expiresAt);
+        return formatAndLogEventResponse(
+                eventResponse.uid,
+                eventResponse.macAddress,
+                eventResponse.measurementType,
+                eventResponse.registeredAt,
+                eventResponse.expiresAt
+        );
     }
 
     // --- REGISTRAR SENSOR DE MOVIMENTO ---
@@ -95,20 +91,12 @@ public class DeviceService {
 
         MotionSensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
 
-        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
-        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
-        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
-
-
-        log.info("Evento SensorRegistered capturado:");
-        log.info("  -> UID: {}", eventResponse.uid);
-        log.info("  -> MAC Address: {}", eventResponse.macAddress);
-        log.info("  -> Tipo de Medida: {}", eventResponse.measurementType);
-        log.info("  -> Registrado em: {}", registeredAt);
-        log.info("  -> Expira em: {}", expiresAt);
-
-        return new SensorRegisterResponseDto(
-                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        return formatAndLogEventResponse(
+                eventResponse.uid,
+                eventResponse.macAddress,
+                eventResponse.measurementType,
+                eventResponse.registeredAt,
+                eventResponse.expiresAt
         );
     }
 
@@ -134,12 +122,12 @@ public class DeviceService {
 
         ProximitySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
 
-        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
-        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
-        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
-
-        return new SensorRegisterResponseDto(
-                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        return formatAndLogEventResponse(
+                eventResponse.uid,
+                eventResponse.macAddress,
+                eventResponse.measurementType,
+                eventResponse.registeredAt,
+                eventResponse.expiresAt
         );
     }
 
@@ -165,12 +153,110 @@ public class DeviceService {
 
         TemperatureSensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
 
-        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
-        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
-        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
-
-        return new SensorRegisterResponseDto(
-                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        return formatAndLogEventResponse(
+                eventResponse.uid,
+                eventResponse.macAddress,
+                eventResponse.measurementType,
+                eventResponse.registeredAt,
+                eventResponse.expiresAt
         );
     }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE HUMIDADE ---
+    public SensorAuthenticResponseDto isHumiditySensorAuthentica(String uid) throws Exception {
+        log.info("Enviando transação para registrar o sensor UID: {}", uid);
+
+        // Envia os dados para a blockchain
+        Boolean transactionReceipt = humiditySensorManager
+                .isHumiditySensorAuthentic(uid)
+                .send();
+
+        if (!transactionReceipt) {
+            throw new RuntimeException("O sensor não está autenticado");
+        }
+
+        return new SensorAuthenticResponseDto(transactionReceipt);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE UMIDADE ---
+    public SensorAuthenticResponseDto isHumiditySensorAuthentic(String uid) throws Exception {
+        log.info("Verificando autenticidade do sensor de UMIDADE UID: {}", uid);
+
+        Boolean isAuthentic = humiditySensorManager
+                .isHumiditySensorAuthentic(uid)
+                .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de UMIDADE não está autenticado");
+        }
+
+        return new SensorAuthenticResponseDto(isAuthentic);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE MOVIMENTO ---
+    public SensorAuthenticResponseDto isMotionSensorAuthentic(String uid) throws Exception {
+        log.info("Verificando autenticidade do sensor de MOVIMENTO UID: {}", uid);
+
+        Boolean isAuthentic = motionSensorManager
+                .isMotionSensorAuthentic(uid)
+                .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de MOVIMENTO não está autenticado");
+        }
+
+        return new SensorAuthenticResponseDto(isAuthentic);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE PROXIMIDADE ---
+    public SensorAuthenticResponseDto isProximitySensorAuthentic(String uid) throws Exception {
+        log.info("Verificando autenticidade do sensor de PROXIMIDADE UID: {}", uid);
+
+        Boolean isAuthentic = proximitySensorManager
+                .isProximitySensorAuthentic(uid)
+                .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de PROXIMIDADE não está autenticado");
+        }
+
+        return new SensorAuthenticResponseDto(isAuthentic);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE TEMPERATURA ---
+    public SensorAuthenticResponseDto isTemperatureSensorAuthentic(String uid) throws Exception {
+        log.info("Verificando autenticidade do sensor de TEMPERATURA UID: {}", uid);
+
+        Boolean isAuthentic = temperatureSensorManager
+                .isTemperatureSensorAuthentic(uid)
+                .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de TEMPERATURA não está autenticado");
+        }
+
+        return new SensorAuthenticResponseDto(isAuthentic);
+    }
+
+    private SensorRegisterResponseDto formatAndLogEventResponse(
+            String uid,
+            String macAddress,
+            String measurementType,
+            BigInteger registeredAtTimestamp,
+            BigInteger expiresAtTimestamp) {
+
+        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(registeredAtTimestamp.longValue());
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(expiresAtTimestamp.longValue());
+
+        log.info("Evento SensorRegistered capturado:");
+        log.info("  -> UID: {}", uid);
+        log.info("  -> MAC Address: {}", macAddress);
+        log.info("  -> Tipo de Medida: {}", measurementType);
+        log.info("  -> Registrado em: {}", registeredAt);
+        log.info("  -> Expira em: {}", expiresAt);
+
+        return new SensorRegisterResponseDto(uid, macAddress, measurementType, registeredAt, expiresAt);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ufrn.ppgti.iot_sc_api;
 
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorAuthenticResponseDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,4 +79,47 @@ public class DeviceController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE HUMIDADE ---
+    @Operation(summary = "Verifica a autenticidade de um sensor de umidade",
+            description = "Consulta o smart contract para verificar se um sensor de umidade (pelo seu UID) é autêntico e válido.")
+    @ApiResponse(responseCode = "200", description = "Sensor é autêntico")
+    @GetMapping("/authentic/humidity/{uid}")
+    public ResponseEntity<SensorAuthenticResponseDto> isHumiditySensorAuthentic(@PathVariable String uid) throws Exception {
+        log.info("Requisição para verificar autenticidade do sensor de umidade: {}", uid);
+        SensorAuthenticResponseDto response = deviceService.isHumiditySensorAuthentic(uid);
+        return ResponseEntity.ok(response);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE MOVIMENTO ---
+    @Operation(summary = "Verifica a autenticidade de um sensor de movimento",
+            description = "Consulta o smart contract para verificar se um sensor de movimento (pelo seu UID) é autêntico e válido.")
+    @ApiResponse(responseCode = "200", description = "Sensor é autêntico")
+    @GetMapping("/authentic/motion/{uid}")
+    public ResponseEntity<SensorAuthenticResponseDto> isMotionSensorAuthentic(@PathVariable String uid) throws Exception {
+        log.info("Requisição para verificar autenticidade do sensor de movimento: {}", uid);
+        SensorAuthenticResponseDto response = deviceService.isMotionSensorAuthentic(uid);
+        return ResponseEntity.ok(response);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE PROXIMIDADE ---
+    @Operation(summary = "Verifica a autenticidade de um sensor de proximidade",
+            description = "Consulta o smart contract para verificar se um sensor de proximidade (pelo seu UID) é autêntico e válido.")
+    @ApiResponse(responseCode = "200", description = "Sensor é autêntico")
+    @GetMapping("/authentic/proximity/{uid}")
+    public ResponseEntity<SensorAuthenticResponseDto> isProximitySensorAuthentic(@PathVariable String uid) throws Exception {
+        log.info("Requisição para verificar autenticidade do sensor de proximidade: {}", uid);
+        SensorAuthenticResponseDto response = deviceService.isProximitySensorAuthentic(uid);
+        return ResponseEntity.ok(response);
+    }
+
+    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE TEMPERATURA ---
+    @Operation(summary = "Verifica a autenticidade de um sensor de temperatura",
+            description = "Consulta o smart contract para verificar se um sensor de temperatura (pelo seu UID) é autêntico e válido.")
+    @ApiResponse(responseCode = "200", description = "Sensor é autêntico")
+    @GetMapping("/authentic/temperature/{uid}")
+    public ResponseEntity<SensorAuthenticResponseDto> isTemperatureSensorAuthentic(@PathVariable String uid) throws Exception {
+        log.info("Requisição para verificar autenticidade do sensor de temperatura: {}", uid);
+        SensorAuthenticResponseDto response = deviceService.isTemperatureSensorAuthentic(uid);
+        return ResponseEntity.ok(response);
+    }
 }
