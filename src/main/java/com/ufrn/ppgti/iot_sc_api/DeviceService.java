@@ -1,95 +1,176 @@
 package com.ufrn.ppgti.iot_sc_api;
 
-import com.ufrn.ppgti.iot_sc_api.dtos.DeviceAuthenticateResponseDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceByCategoryDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceResponseOkDto;
+import com.ufrn.ppgti.iot_sc_api.contracts.HumiditySensorManager;
+import com.ufrn.ppgti.iot_sc_api.contracts.MotionSensorManager;
+import com.ufrn.ppgti.iot_sc_api.contracts.ProximitySensorManager;
+import com.ufrn.ppgti.iot_sc_api.contracts.TemperatureSensorManager;
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterDto;
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
 public class DeviceService {
+    private final HumiditySensorManager humiditySensorManager;
+    private final MotionSensorManager motionSensorManager;
+    private final ProximitySensorManager proximitySensorManager;
+    private final TemperatureSensorManager temperatureSensorManager;
 
-    /**
-     * Registra um novo dispositivo no sistema com base nas informações fornecidas.
-     * <p>
-     * Este método recebe os dados básicos de um dispositivo, realiza a validação
-     * necessária, persiste as informações e retorna uma confirmação de sucesso.
-     *
-     * @param registerDeviceDto DTO contendo os dados básicos para o registro do dispositivo,
-     * como ID, tipo e modelo.
-     * @return DTO com a confirmação e os dados do dispositivo registrado, incluindo o status
-     * e a data de registro.
-     */
-    public RegisterDeviceResponseOkDto registerDevice(RegisterDeviceDto registerDeviceDto) {
-        log.info("Iniciando processo de registro para o dispositivo ID: {}", registerDeviceDto.id());
-        return this.fingirQueChamouSc(registerDeviceDto);
+    public DeviceService(HumiditySensorManager humiditySensorManager,
+                         MotionSensorManager motionSensorManager,
+                         ProximitySensorManager proximitySensorManager,
+                         TemperatureSensorManager temperatureSensorManager) {
+        this.humiditySensorManager = humiditySensorManager;
+        this.motionSensorManager = motionSensorManager;
+        this.proximitySensorManager = proximitySensorManager;
+        this.temperatureSensorManager = temperatureSensorManager;
     }
 
-    /**
-     * Registra um novo dispositivo utilizando uma estrutura de dados detalhada baseada em categorias.
-     * <p>
-     * Este método permite um registro especificando não apenas o tipo,
-     * mas também a categoria e a função do sensor, o que facilita a organização e
-     * busca de dispositivos no sistema.
-     *
-     * @param registerDeviceByCategoryDto DTO com informações detalhadas para o registro,
-     * incluindo categoria, tipo, função e modelo do sensor.
-     * @return DTO com a confirmação e os dados do dispositivo registrado.
-     */
-    public RegisterDeviceResponseOkDto registerDeviceByCategory(RegisterDeviceByCategoryDto registerDeviceByCategoryDto) {
-        log.info("Iniciando processo de registro por categoria para o dispositivo ID: {}", registerDeviceByCategoryDto.id());
-        return this.fingirQueChamouSc(registerDeviceByCategoryDto);
+    // --- REGISTRAR SENSOR DE HUMIDADE ---
+    public SensorRegisterResponseDto registerHumiditySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Enviando transação para registrar o sensor UID: {}", sensorRegisterDto.id());
+
+        // Envia os dados para a blockchain
+        TransactionReceipt transactionReceipt = humiditySensorManager
+                .registerHumiditySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                .send();
+
+        if (!transactionReceipt.isStatusOK()) {
+            throw new RuntimeException("Falha na transação de registro! Status: " + transactionReceipt.getStatus());
+        }
+
+        log.info("Dispositivo registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
+
+        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+
+        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
+        List<HumiditySensorManager.SensorRegisteredEventResponse> events = humiditySensorManager.getSensorRegisteredEvents(transactionReceipt);
+
+        // 3. Verifique se o evento foi encontrado e processe os dados
+        if (events.isEmpty()) {
+            throw new IllegalStateException("Evento de registro de movimento não encontrado!");
+        }
+        HumiditySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0); // Pega o primeiro evento da lista
+
+        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
+
+
+        log.info("Evento SensorRegistered capturado:");
+        log.info("  -> UID: {}", eventResponse.uid);
+        log.info("  -> MAC Address: {}", eventResponse.macAddress);
+        log.info("  -> Tipo de Medida: {}", eventResponse.measurementType);
+        log.info("  -> Registrado em: {}", registeredAt);
+        log.info("  -> Expira em: {}", expiresAt);
+
+        return new SensorRegisterResponseDto(eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType,
+                registeredAt,expiresAt);
     }
 
-    /**
-     * Verifica o status de autenticação de um dispositivo específico com base em seu ID.
-     * <p>
-     * O método consulta o sistema para determinar se o dispositivo está atualmente
-     * considerado autêntico e autorizado a operar. É útil para validar a atividade
-     * de um dispositivo antes de aceitar seus dados.
-     *
-     * @param id O identificador único (ID) do dispositivo a ser verificado.
-     * @return DTO contendo o status da autenticação (<code>true</code> ou <code>false</code>)
-     * e informações adicionais, como a data da verificação.
-     */
-    public DeviceAuthenticateResponseDto verifyDeviceAuthenticate(String id) {
-        log.info("Iniciando processo de verificação de autenticidade para o ID: {}", id);
-        return this.fingirQueChamouSc(id);
+    // --- REGISTRAR SENSOR DE MOVIMENTO ---
+    public SensorRegisterResponseDto registerMotionSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Enviando transação para registrar o sensor de MOVIMENTO UID: {}", sensorRegisterDto.id());
+
+        // Envia os dados para a blockchain
+        TransactionReceipt transactionReceipt = motionSensorManager
+                .registerMotionSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                .send();
+
+        if (!transactionReceipt.isStatusOK()) {
+            throw new RuntimeException("Falha na transação de registro de movimento! Status: " + transactionReceipt.getStatus());
+        }
+
+        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
+        List<MotionSensorManager.SensorRegisteredEventResponse> events = motionSensorManager.getSensorRegisteredEvents(transactionReceipt);
+
+        if (events.isEmpty()) {
+            throw new IllegalStateException("Evento de registro de movimento não encontrado!");
+        }
+
+        MotionSensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
+
+        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
+
+
+        log.info("Evento SensorRegistered capturado:");
+        log.info("  -> UID: {}", eventResponse.uid);
+        log.info("  -> MAC Address: {}", eventResponse.macAddress);
+        log.info("  -> Tipo de Medida: {}", eventResponse.measurementType);
+        log.info("  -> Registrado em: {}", registeredAt);
+        log.info("  -> Expira em: {}", expiresAt);
+
+        return new SensorRegisterResponseDto(
+                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        );
     }
 
+    // --- REGISTRAR SENSOR DE PROXIMIDADE ---
+    public SensorRegisterResponseDto registerProximitySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Enviando transação para registrar o sensor de PROXIMIDADE UID: {}", sensorRegisterDto.id());
 
-    // Metodos para fingir que ta chamando o contrato inteligente
+        TransactionReceipt transactionReceipt = proximitySensorManager
+                .registerProximitySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                .send();
 
-    private RegisterDeviceResponseOkDto fingirQueChamouSc(RegisterDeviceDto registerDeviceDto) {
-        log.info("Simulando chamada ao Smart Contract para registro padrão...");
-        log.debug("Dados recebidos para simulação: {}", registerDeviceDto); // DEBUG para não poluir o log
+        if (!transactionReceipt.isStatusOK()) {
+            throw new RuntimeException("Falha na transação de registro de proximidade! Status: " + transactionReceipt.getStatus());
+        }
 
-        LocalDateTime agora = LocalDateTime.now();
-        RegisterDeviceResponseOkDto response = new RegisterDeviceResponseOkDto(agora, agora.plusHours(3));
+        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
+        List<ProximitySensorManager.SensorRegisteredEventResponse> events = proximitySensorManager.getSensorRegisteredEvents(transactionReceipt);
 
-        log.info("Simulação de registro padrão concluída com sucesso.");
-        return response;
+        if (events.isEmpty()) {
+            throw new IllegalStateException("Evento de registro de proximidade não encontrado!");
+        }
+
+        ProximitySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
+
+        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
+
+        return new SensorRegisterResponseDto(
+                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        );
     }
 
-    private RegisterDeviceResponseOkDto fingirQueChamouSc(RegisterDeviceByCategoryDto registerDeviceDto) {
-        log.info("Simulando chamada ao Smart Contract para registro por categoria...");
-        log.debug("Dados recebidos para simulação: {}", registerDeviceDto);
+    // --- REGISTRAR SENSOR DE TEMPERATURA ---
+    public SensorRegisterResponseDto registerTemperatureSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Enviando transação para registrar o sensor de TEMPERATURA UID: {}", sensorRegisterDto.id());
 
-        LocalDateTime agora = LocalDateTime.now();
-        RegisterDeviceResponseOkDto response = new RegisterDeviceResponseOkDto(agora, agora.plusHours(6));
+        TransactionReceipt transactionReceipt = temperatureSensorManager
+                .registerTemperatureSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                .send();
 
-        log.info("Simulação de registro por categoria concluída com sucesso.");
-        return response;
-    }
+        if (!transactionReceipt.isStatusOK()) {
+            throw new RuntimeException("Falha na transação de registro de temperatura! Status: " + transactionReceipt.getStatus());
+        }
 
-    private DeviceAuthenticateResponseDto fingirQueChamouSc(String id) {
-        log.info("Simulando chamada ao Smart Contract para autenticar o ID: {}", id);
-        DeviceAuthenticateResponseDto response = new DeviceAuthenticateResponseDto(id, Boolean.TRUE, LocalDateTime.now());
-        log.info("Simulação de autenticação concluída. Dispositivo considerado autêntico.");
-        return response;
+        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
+        List<TemperatureSensorManager.SensorRegisteredEventResponse> events = temperatureSensorManager.getSensorRegisteredEvents(transactionReceipt);
+
+        if (events.isEmpty()) {
+            throw new IllegalStateException("Evento de registro de temperatura não encontrado!");
+        }
+
+        TemperatureSensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
+
+        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(eventResponse.registeredAt.longValue());
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(eventResponse.expiresAt.longValue());
+
+        return new SensorRegisterResponseDto(
+                eventResponse.uid, eventResponse.macAddress, eventResponse.measurementType, registeredAt, expiresAt
+        );
     }
 }

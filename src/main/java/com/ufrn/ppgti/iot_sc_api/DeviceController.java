@@ -1,11 +1,8 @@
 package com.ufrn.ppgti.iot_sc_api;
 
-import com.ufrn.ppgti.iot_sc_api.dtos.DeviceAuthenticateResponseDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceByCategoryDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceDto;
-import com.ufrn.ppgti.iot_sc_api.dtos.RegisterDeviceResponseOkDto;
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterDto;
+import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,55 +22,60 @@ public class DeviceController {
     @Autowired
     private DeviceService deviceService;
 
-    @Operation(summary = "Registra um novo dispositivo IoT",
-            description = "Recebe os dados de um novo dispositivo, os valida e envia uma transação para o smart contract para efetuar o registro na blockchain. Esta é uma operação sensível que deve ser realizada por um administrador.")
+    // --- REGISTRAR SENSOR DE MOVIMENTO ---
+    @Operation(summary = "Registra um novo sensor de humidade",
+            description = "Recebe os dados de um sensor dispositivo e envia uma transação para o smart contract para efetuar o registro na blockchain. Esta é uma operação sensível que deve ser realizada por um administrador.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Dispositivo registrado com sucesso",
+            @ApiResponse(responseCode = "200", description = "Sensor registrado com sucesso",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = RegisterDeviceResponseOkDto.class))
+                            schema = @Schema(implementation = SensorRegisterResponseDto.class))
             )
     })
-    @PostMapping("register")
-    public ResponseEntity<RegisterDeviceResponseOkDto> registerDevice(@RequestBody RegisterDeviceDto registerDeviceDto) {
-        log.info("Requisição para registrar novo dispositivo. ID: {}", registerDeviceDto.id());
-        RegisterDeviceResponseOkDto response = deviceService.registerDevice(registerDeviceDto);
-        log.info("Dispositivo registrado com sucesso. ID: {}", registerDeviceDto.id());
+    @PostMapping("register/humidity")
+    public ResponseEntity<SensorRegisterResponseDto> registerHumiditySensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Requisição para registrar novo dispositivo. ID: {}", sensorRegisterDto.id());
+        SensorRegisterResponseDto response = deviceService.registerHumiditySensor(sensorRegisterDto);
+        log.info("Dispositivo registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @Operation(summary = "Registra um novo dispositivo IoT pela classe do dispositivo",
-            description = "Registra um dispositivo associando-o a uma categoria pré-definida no smart contract (ex: 'sensor', 'atuador'). Simplifica o processo de registro para tipos de dispositivos comuns.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Dispositivo registrado com sucesso na categoria especificada",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = RegisterDeviceResponseOkDto.class))
-            )
-    })
-    @PostMapping("register/category")
-    public ResponseEntity<RegisterDeviceResponseOkDto> registerDeviceByCategory(
-            @RequestBody RegisterDeviceByCategoryDto registerDeviceByCategoryDto) {
-        log.info("Requisição para registrar por categoria. Categoria: {}, ID: {}",
-                registerDeviceByCategoryDto.category(), registerDeviceByCategoryDto.id());
-        RegisterDeviceResponseOkDto response = deviceService.registerDeviceByCategory(registerDeviceByCategoryDto);
-        log.info("Dispositivo registrado com sucesso. ID: {}", registerDeviceByCategoryDto.id());
+    // --- REGISTRAR SENSOR DE MOVIMENTO ---
+    @Operation(summary = "Registra um novo sensor de movimento",
+            description = "Recebe os dados de um sensor e envia uma transação para o smart contract de movimento para efetuar o registro na blockchain.")
+    @ApiResponse(responseCode = "200", description = "Sensor de movimento registrado com sucesso",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SensorRegisterResponseDto.class)))
+    @PostMapping("/register/motion")
+    public ResponseEntity<SensorRegisterResponseDto> registerMotionSensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Requisição para registrar novo sensor de MOVIMENTO. ID: {}", sensorRegisterDto.id());
+        SensorRegisterResponseDto response = deviceService.registerMotionSensor(sensorRegisterDto);
+        log.info("Sensor de MOVIMENTO registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @Operation(summary = "Verifica a autenticidade de um dispositivo",
-            description = "Consulta a blockchain para verificar se um dispositivo com o ID especificado está registrado e é autêntico. É uma operação de leitura, rápida e de baixo custo.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Verificação realizada com sucesso",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = DeviceAuthenticateResponseDto.class))
-            )
-    })
-    @GetMapping("{id}/authenticate")
-    public ResponseEntity<DeviceAuthenticateResponseDto> verifyDeviceAuthenticate(
-            @Parameter(description = "Identificador único do dispositivo a ser verificado.")
-            @PathVariable String id) {
-        log.info("Requisição para verificar autenticidade do. ID: {}.", id);
-        DeviceAuthenticateResponseDto response = deviceService.verifyDeviceAuthenticate(id);
-        log.info("Verificação concluída. ID: {}, Status de autenticado: {}", id, response.authenticated());
+    // --- REGISTRAR SENSOR DE PROXIMIDADE ---
+    @Operation(summary = "Registra um novo sensor de proximidade",
+            description = "Recebe os dados de um sensor e envia uma transação para o smart contract de proximidade para efetuar o registro na blockchain.")
+    @ApiResponse(responseCode = "200", description = "Sensor de proximidade registrado com sucesso",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SensorRegisterResponseDto.class)))
+    @PostMapping("/register/proximity")
+    public ResponseEntity<SensorRegisterResponseDto> registerProximitySensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Requisição para registrar novo sensor de PROXIMIDADE. ID: {}", sensorRegisterDto.id());
+        SensorRegisterResponseDto response = deviceService.registerProximitySensor(sensorRegisterDto);
+        log.info("Sensor de PROXIMIDADE registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    // --- REGISTRAR SENSOR DE TEMPERATURA ---
+    @Operation(summary = "Registra um novo sensor de temperatura",
+            description = "Recebe os dados de um sensor e envia uma transação para o smart contract de temperatura para efetuar o registro na blockchain.")
+    @ApiResponse(responseCode = "200", description = "Sensor de temperatura registrado com sucesso",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SensorRegisterResponseDto.class)))
+    @PostMapping("/register/temperature")
+    public ResponseEntity<SensorRegisterResponseDto> registerTemperatureSensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
+        log.info("Requisição para registrar novo sensor de TEMPERATURA. ID: {}", sensorRegisterDto.id());
+        SensorRegisterResponseDto response = deviceService.registerTemperatureSensor(sensorRegisterDto);
+        log.info("Sensor de TEMPERATURA registrado com sucesso. ID: {}", sensorRegisterDto.id());
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 }
