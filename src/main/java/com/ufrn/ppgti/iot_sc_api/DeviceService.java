@@ -41,6 +41,7 @@ public class DeviceService {
                 .registerHumiditySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
                 .send();
 
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAA");
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro! Status: " + transactionReceipt.getStatus());
         }
