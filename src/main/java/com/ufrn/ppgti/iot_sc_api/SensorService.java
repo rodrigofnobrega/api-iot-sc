@@ -22,6 +22,15 @@ public class SensorService {
     private final ProximitySensorManager proximitySensorManager;
     private final TemperatureSensorManager temperatureSensorManager;
 
+    /**
+     * Construtor para injeção de dependência dos wrappers de contrato.
+     * O Spring injetará automaticamente os beans de cada gerenciador de contrato.
+     *
+     * @param humiditySensorManager    Wrapper do contrato inteligente para sensores de umidade.
+     * @param motionSensorManager      Wrapper do contrato inteligente para sensores de movimento.
+     * @param proximitySensorManager   Wrapper do contrato inteligente para sensores de proximidade.
+     * @param temperatureSensorManager Wrapper do contrato inteligente para sensores de temperatura.
+     */
     public SensorService(HumiditySensorManager humiditySensorManager,
                          MotionSensorManager motionSensorManager,
                          ProximitySensorManager proximitySensorManager,
@@ -32,33 +41,36 @@ public class SensorService {
         this.temperatureSensorManager = temperatureSensorManager;
     }
 
-    // --- REGISTRAR SENSOR DE HUMIDADE ---
+    /**
+     * Registra um novo sensor de umidade na blockchain.
+     * Envia uma transação para o smart contract e processa o evento 'SensorRegistered' resultante.
+     *
+     * @param sensorRegisterDto DTO contendo o ID e o endereço MAC do sensor a ser registrado.
+     * @return Um DTO com os detalhes completos do registro, extraídos do evento do contrato.
+     * @throws Exception Se a transação falhar ou o evento de registro não for encontrado.
+     */
     public SensorRegisterResponseDto registerHumiditySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
-        log.info("Enviando transação para registrar o sensor UID: {}", sensorRegisterDto.id());
+        log.info("Enviando transação para registrar o sensor de UMIDADE UID: {}", sensorRegisterDto.id());
 
         // Envia os dados para a blockchain
         TransactionReceipt transactionReceipt = humiditySensorManager
                 .registerHumiditySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
                 .send();
 
-        System.out.println("AAAAAAAAAAAAAAAAAAAAAA");
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro! Status: " + transactionReceipt.getStatus());
         }
 
-        log.info("Dispositivo registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
+        log.info("Dispositivo de UMIDADE registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
 
         // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
-
-        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
         List<HumiditySensorManager.SensorRegisteredEventResponse> events = humiditySensorManager.getSensorRegisteredEvents(transactionReceipt);
 
-        // 3. Verifique se o evento foi encontrado e processe os dados
         if (events.isEmpty()) {
-            throw new IllegalStateException("Evento de registro de movimento não encontrado!");
+            throw new IllegalStateException("Evento de registro de umidade não encontrado!");
         }
 
-        HumiditySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0); // Pega o primeiro evento da lista
+        HumiditySensorManager.SensorRegisteredEventResponse eventResponse = events.get(0);
 
         return formatAndLogEventResponse(
                 eventResponse.uid,
@@ -69,7 +81,14 @@ public class SensorService {
         );
     }
 
-    // --- REGISTRAR SENSOR DE MOVIMENTO ---
+    /**
+     * Registra um novo sensor de movimento na blockchain.
+     * Envia uma transação para o smart contract e processa o evento 'MotionSensorRegistered' resultante.
+     *
+     * @param sensorRegisterDto DTO contendo o ID e o endereço MAC do sensor a ser registrado.
+     * @return Um DTO com os detalhes completos do registro, extraídos do evento do contrato.
+     * @throws Exception Se a transação falhar ou o evento de registro não for encontrado.
+     */
     public SensorRegisterResponseDto registerMotionSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de MOVIMENTO UID: {}", sensorRegisterDto.id());
 
@@ -83,7 +102,6 @@ public class SensorService {
         }
 
         // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
-        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
         List<MotionSensorManager.SensorRegisteredEventResponse> events = motionSensorManager.getSensorRegisteredEvents(transactionReceipt);
 
         if (events.isEmpty()) {
@@ -101,7 +119,14 @@ public class SensorService {
         );
     }
 
-    // --- REGISTRAR SENSOR DE PROXIMIDADE ---
+    /**
+     * Registra um novo sensor de proximidade na blockchain.
+     * Envia uma transação para o smart contract e processa o evento 'ProximitySensorRegistered' resultante.
+     *
+     * @param sensorRegisterDto DTO contendo o ID e o endereço MAC do sensor a ser registrado.
+     * @return Um DTO com os detalhes completos do registro, extraídos do evento do contrato.
+     * @throws Exception Se a transação falhar ou o evento de registro não for encontrado.
+     */
     public SensorRegisterResponseDto registerProximitySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de PROXIMIDADE UID: {}", sensorRegisterDto.id());
 
@@ -114,7 +139,6 @@ public class SensorService {
         }
 
         // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
-        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
         List<ProximitySensorManager.SensorRegisteredEventResponse> events = proximitySensorManager.getSensorRegisteredEvents(transactionReceipt);
 
         if (events.isEmpty()) {
@@ -132,7 +156,14 @@ public class SensorService {
         );
     }
 
-    // --- REGISTRAR SENSOR DE TEMPERATURA ---
+    /**
+     * Registra um novo sensor de temperatura na blockchain.
+     * Envia uma transação para o smart contract e processa o evento 'TemperatureSensorRegistered' resultante.
+     *
+     * @param sensorRegisterDto DTO contendo o ID e o endereço MAC do sensor a ser registrado.
+     * @return Um DTO com os detalhes completos do registro, extraídos do evento do contrato.
+     * @throws Exception Se a transação falhar ou o evento de registro não for encontrado.
+     */
     public SensorRegisterResponseDto registerTemperatureSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de TEMPERATURA UID: {}", sensorRegisterDto.id());
 
@@ -145,9 +176,7 @@ public class SensorService {
         }
 
         // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
-        // 2. Use o método gerado pelo wrapper para extrair os eventos do recibo
         List<TemperatureSensorManager.SensorRegisteredEventResponse> events = temperatureSensorManager.getSensorRegisteredEvents(transactionReceipt);
-
         if (events.isEmpty()) {
             throw new IllegalStateException("Evento de registro de temperatura não encontrado!");
         }
@@ -163,23 +192,15 @@ public class SensorService {
         );
     }
 
-    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE HUMIDADE ---
-    public SensorAuthenticResponseDto isHumiditySensorAuthentica(String uid) throws Exception {
-        log.info("Enviando transação para registrar o sensor UID: {}", uid);
-
-        // Envia os dados para a blockchain
-        Boolean transactionReceipt = humiditySensorManager
-                .isHumiditySensorAuthentic(uid)
-                .send();
-
-        if (!transactionReceipt) {
-            throw new RuntimeException("O sensor não está autenticado");
-        }
-
-        return new SensorAuthenticResponseDto(transactionReceipt);
-    }
-
-    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE UMIDADE ---
+    /**
+     * Verifica se um sensor de umidade existente está autenticado.
+     * Chama uma função 'view' no smart contract que retorna um booleano.
+     *
+     * @param uid O identificador único (UID) do sensor a ser verificado.
+     * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
+     * @throws Exception Se a chamada ao contrato falhar.
+     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
+     */
     public SensorAuthenticResponseDto isHumiditySensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de UMIDADE UID: {}", uid);
 
@@ -194,7 +215,15 @@ public class SensorService {
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
-    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE MOVIMENTO ---
+    /**
+     * Verifica se um sensor de movimento existente está autenticado.
+     * Chama uma função 'view' no smart contract que retorna um booleano.
+     *
+     * @param uid O identificador único (UID) do sensor a ser verificado.
+     * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
+     * @throws Exception Se a chamada ao contrato falhar.
+     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
+     */
     public SensorAuthenticResponseDto isMotionSensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de MOVIMENTO UID: {}", uid);
 
@@ -209,7 +238,15 @@ public class SensorService {
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
-    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE PROXIMIDADE ---
+    /**
+     * Verifica se um sensor de proximidade existente está autenticado.
+     * Chama uma função 'view' no smart contract que retorna um booleano.
+     *
+     * @param uid O identificador único (UID) do sensor a ser verificado.
+     * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
+     * @throws Exception Se a chamada ao contrato falhar.
+     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
+     */
     public SensorAuthenticResponseDto isProximitySensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de PROXIMIDADE UID: {}", uid);
 
@@ -224,7 +261,15 @@ public class SensorService {
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
-    // --- VERIFICAR AUTENTICAÇÃO SENSOR DE TEMPERATURA ---
+    /**
+     * Verifica se um sensor de temperatura existente está autenticado.
+     * Chama uma função 'view' no smart contract que retorna um booleano.
+     *
+     * @param uid O identificador único (UID) do sensor a ser verificado.
+     * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
+     * @throws Exception Se a chamada ao contrato falhar.
+     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
+     */
     public SensorAuthenticResponseDto isTemperatureSensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de TEMPERATURA UID: {}", uid);
 
@@ -239,6 +284,17 @@ public class SensorService {
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
+    /**
+     * Método auxiliar privado para formatar, registrar em log e converter os dados de um evento
+     * de registro em um DTO de resposta padronizado.
+     *
+     * @param uid UID do sensor.
+     * @param macAddress Endereço MAC do sensor.
+     * @param measurementType Tipo de medição do sensor.
+     * @param registeredAtTimestamp Timestamp (em segundos) do registro.
+     * @param expiresAtTimestamp Timestamp (em segundos) da expiração.
+     * @return Um DTO de resposta preenchido.
+     */
     private SensorRegisterResponseDto formatAndLogEventResponse(
             String uid,
             String macAddress,
