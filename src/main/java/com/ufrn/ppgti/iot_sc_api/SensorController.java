@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/device/")
 @Slf4j
-public class DeviceController {
+public class SensorController {
     @Autowired
-    private DeviceService deviceService;
+    private SensorService sensorService;
 
     // --- REGISTRAR SENSOR DE MOVIMENTO ---
     @Operation(summary = "Registra um novo sensor de humidade",
@@ -35,7 +35,7 @@ public class DeviceController {
     @PostMapping("register/humidity")
     public ResponseEntity<SensorRegisterResponseDto> registerHumiditySensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Requisição para registrar novo dispositivo. ID: {}", sensorRegisterDto.id());
-        SensorRegisterResponseDto response = deviceService.registerHumiditySensor(sensorRegisterDto);
+        SensorRegisterResponseDto response = sensorService.registerHumiditySensor(sensorRegisterDto);
         log.info("Dispositivo registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -48,7 +48,7 @@ public class DeviceController {
     @PostMapping("/register/motion")
     public ResponseEntity<SensorRegisterResponseDto> registerMotionSensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Requisição para registrar novo sensor de MOVIMENTO. ID: {}", sensorRegisterDto.id());
-        SensorRegisterResponseDto response = deviceService.registerMotionSensor(sensorRegisterDto);
+        SensorRegisterResponseDto response = sensorService.registerMotionSensor(sensorRegisterDto);
         log.info("Sensor de MOVIMENTO registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -61,7 +61,7 @@ public class DeviceController {
     @PostMapping("/register/proximity")
     public ResponseEntity<SensorRegisterResponseDto> registerProximitySensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Requisição para registrar novo sensor de PROXIMIDADE. ID: {}", sensorRegisterDto.id());
-        SensorRegisterResponseDto response = deviceService.registerProximitySensor(sensorRegisterDto);
+        SensorRegisterResponseDto response = sensorService.registerProximitySensor(sensorRegisterDto);
         log.info("Sensor de PROXIMIDADE registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -74,7 +74,7 @@ public class DeviceController {
     @PostMapping("/register/temperature")
     public ResponseEntity<SensorRegisterResponseDto> registerTemperatureSensor(@RequestBody SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Requisição para registrar novo sensor de TEMPERATURA. ID: {}", sensorRegisterDto.id());
-        SensorRegisterResponseDto response = deviceService.registerTemperatureSensor(sensorRegisterDto);
+        SensorRegisterResponseDto response = sensorService.registerTemperatureSensor(sensorRegisterDto);
         log.info("Sensor de TEMPERATURA registrado com sucesso. ID: {}", sensorRegisterDto.id());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -86,7 +86,7 @@ public class DeviceController {
     @GetMapping("/authentic/humidity/{uid}")
     public ResponseEntity<SensorAuthenticResponseDto> isHumiditySensorAuthentic(@PathVariable String uid) throws Exception {
         log.info("Requisição para verificar autenticidade do sensor de umidade: {}", uid);
-        SensorAuthenticResponseDto response = deviceService.isHumiditySensorAuthentic(uid);
+        SensorAuthenticResponseDto response = sensorService.isHumiditySensorAuthentic(uid);
         return ResponseEntity.ok(response);
     }
 
@@ -97,7 +97,7 @@ public class DeviceController {
     @GetMapping("/authentic/motion/{uid}")
     public ResponseEntity<SensorAuthenticResponseDto> isMotionSensorAuthentic(@PathVariable String uid) throws Exception {
         log.info("Requisição para verificar autenticidade do sensor de movimento: {}", uid);
-        SensorAuthenticResponseDto response = deviceService.isMotionSensorAuthentic(uid);
+        SensorAuthenticResponseDto response = sensorService.isMotionSensorAuthentic(uid);
         return ResponseEntity.ok(response);
     }
 
@@ -108,7 +108,7 @@ public class DeviceController {
     @GetMapping("/authentic/proximity/{uid}")
     public ResponseEntity<SensorAuthenticResponseDto> isProximitySensorAuthentic(@PathVariable String uid) throws Exception {
         log.info("Requisição para verificar autenticidade do sensor de proximidade: {}", uid);
-        SensorAuthenticResponseDto response = deviceService.isProximitySensorAuthentic(uid);
+        SensorAuthenticResponseDto response = sensorService.isProximitySensorAuthentic(uid);
         return ResponseEntity.ok(response);
     }
 
@@ -119,7 +119,7 @@ public class DeviceController {
     @GetMapping("/authentic/temperature/{uid}")
     public ResponseEntity<SensorAuthenticResponseDto> isTemperatureSensorAuthentic(@PathVariable String uid) throws Exception {
         log.info("Requisição para verificar autenticidade do sensor de temperatura: {}", uid);
-        SensorAuthenticResponseDto response = deviceService.isTemperatureSensorAuthentic(uid);
+        SensorAuthenticResponseDto response = sensorService.isTemperatureSensorAuthentic(uid);
         return ResponseEntity.ok(response);
     }
 }

@@ -16,13 +16,13 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class DeviceService {
+public class SensorService {
     private final HumiditySensorManager humiditySensorManager;
     private final MotionSensorManager motionSensorManager;
     private final ProximitySensorManager proximitySensorManager;
     private final TemperatureSensorManager temperatureSensorManager;
 
-    public DeviceService(HumiditySensorManager humiditySensorManager,
+    public SensorService(HumiditySensorManager humiditySensorManager,
                          MotionSensorManager motionSensorManager,
                          ProximitySensorManager proximitySensorManager,
                          TemperatureSensorManager temperatureSensorManager) {
