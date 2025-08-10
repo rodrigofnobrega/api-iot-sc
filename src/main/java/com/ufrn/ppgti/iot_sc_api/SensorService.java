@@ -208,10 +208,6 @@ public class SensorService {
                 .isHumiditySensorAuthentic(uid)
                 .send();
 
-        if (!isAuthentic) {
-            throw new RuntimeException("O sensor de UMIDADE não está autenticado");
-        }
-
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
@@ -230,10 +226,6 @@ public class SensorService {
         Boolean isAuthentic = motionSensorManager
                 .isMotionSensorAuthentic(uid)
                 .send();
-
-        if (!isAuthentic) {
-            throw new RuntimeException("O sensor de MOVIMENTO não está autenticado");
-        }
 
         return new SensorAuthenticResponseDto(isAuthentic);
     }
@@ -254,10 +246,6 @@ public class SensorService {
                 .isProximitySensorAuthentic(uid)
                 .send();
 
-        if (!isAuthentic) {
-            throw new RuntimeException("O sensor de PROXIMIDADE não está autenticado");
-        }
-
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
@@ -268,7 +256,6 @@ public class SensorService {
      * @param uid O identificador único (UID) do sensor a ser verificado.
      * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
      * @throws Exception Se a chamada ao contrato falhar.
-     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
      */
     public SensorAuthenticResponseDto isTemperatureSensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de TEMPERATURA UID: {}", uid);
@@ -276,10 +263,6 @@ public class SensorService {
         Boolean isAuthentic = temperatureSensorManager
                 .isTemperatureSensorAuthentic(uid)
                 .send();
-
-        if (!isAuthentic) {
-            throw new RuntimeException("O sensor de TEMPERATURA não está autenticado");
-        }
 
         return new SensorAuthenticResponseDto(isAuthentic);
     }
