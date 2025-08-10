@@ -5,8 +5,6 @@
 
 Este projeto consiste em uma API RESTful desenvolvida em **Java com Spring Boot** que serve como um backend para interagir com um conjunto de **Smart Contracts** na blockchain Ethereum. A finalidade da API é gerenciar o ciclo de vida de dispositivos IoT (Sensores de Umidade, Movimento, Proximidade e Temperatura), utilizando a blockchain para garantir a autenticidade, integridade e rastreabilidade do registro desses dispositivos.
 
-A arquitetura foi desenhada para ser modular e extensível, com uma clara separação de responsabilidades entre o controller, o serviço e a camada de interação com a blockchain.
-
 ## 2. Principais Funcionalidades
 
 * **Registro de Dispositivos:** Permite que um administrador registre diferentes tipos de sensores na blockchain. Cada registro é uma transação que, se bem-sucedida, emite um evento com os detalhes do registro.
@@ -20,7 +18,7 @@ A arquitetura foi desenhada para ser modular e extensível, com uma clara separa
 * **Linguagem:** Java 17+
 * **Framework:** Spring Boot 3.x
 * **Comunicação com Blockchain:** Web3j
-* **Dependências:** Lombok, Spring Web, Swagger (springdoc-openapi)
+* **Dependências:** Spring Web, Swagger (springdoc-openapi)
 * **Build:** Maven
 
 ### Blockchain
