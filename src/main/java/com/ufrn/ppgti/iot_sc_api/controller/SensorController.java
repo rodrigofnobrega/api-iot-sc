@@ -1,5 +1,6 @@
-package com.ufrn.ppgti.iot_sc_api;
+package com.ufrn.ppgti.iot_sc_api.controller;
 
+import com.ufrn.ppgti.iot_sc_api.service.SensorService;
 import com.ufrn.ppgti.iot_sc_api.dtos.ErrorResponseDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorAuthenticResponseDto;
 import com.ufrn.ppgti.iot_sc_api.dtos.SensorRegisterDto;

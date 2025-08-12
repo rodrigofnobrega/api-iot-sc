@@ -1,4 +1,4 @@
-package com.ufrn.ppgti.iot_sc_api;
+package com.ufrn.ppgti.iot_sc_api.service;
 
 import com.ufrn.ppgti.iot_sc_api.contracts.HumiditySensorManager;
 import com.ufrn.ppgti.iot_sc_api.contracts.MotionSensorManager;
