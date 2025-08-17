@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class SensorService {
+    private final Object adminTransactionLock = new Object();
     private final HumiditySensorManager humiditySensorManager;
     private final MotionSensorManager motionSensorManager;
     private final ProximitySensorManager proximitySensorManager;
@@ -51,11 +52,15 @@ public class SensorService {
      */
     public SensorRegisterResponseDto registerHumiditySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de UMIDADE UID: {}", sensorRegisterDto.id());
+        TransactionReceipt transactionReceipt;
 
-        // Envia os dados para a blockchain
-        TransactionReceipt transactionReceipt = humiditySensorManager
-                .registerHumiditySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
-                .send();
+        synchronized (adminTransactionLock) {
+            log.debug("Adquiriu o lock para enviar transação de umidade.");
+            transactionReceipt = humiditySensorManager
+                    .registerHumiditySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                    .send();
+            log.debug("Liberou o lock após enviar transação de umidade.");
+        }
 
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro! Status: " + transactionReceipt.getStatus());
@@ -63,7 +68,6 @@ public class SensorService {
 
         log.info("Dispositivo de UMIDADE registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
 
-        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
         List<HumiditySensorManager.SensorRegisteredEventResponse> events = humiditySensorManager.getSensorRegisteredEvents(transactionReceipt);
 
         if (events.isEmpty()) {
@@ -91,17 +95,23 @@ public class SensorService {
      */
     public SensorRegisterResponseDto registerMotionSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de MOVIMENTO UID: {}", sensorRegisterDto.id());
+        TransactionReceipt transactionReceipt;
 
-        // Envia os dados para a blockchain
-        TransactionReceipt transactionReceipt = motionSensorManager
-                .registerMotionSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
-                .send();
+        // MODIFICAÇÃO: Adicionado bloco synchronized para segurança de thread
+        synchronized (adminTransactionLock) {
+            log.debug("Adquiriu o lock para enviar transação de movimento.");
+            transactionReceipt = motionSensorManager
+                    .registerMotionSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                    .send();
+            log.debug("Liberou o lock após enviar transação de movimento.");
+        }
 
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro de movimento! Status: " + transactionReceipt.getStatus());
         }
 
-        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        log.info("Dispositivo de MOVIMENTO registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
+
         List<MotionSensorManager.SensorRegisteredEventResponse> events = motionSensorManager.getSensorRegisteredEvents(transactionReceipt);
 
         if (events.isEmpty()) {
@@ -129,16 +139,23 @@ public class SensorService {
      */
     public SensorRegisterResponseDto registerProximitySensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de PROXIMIDADE UID: {}", sensorRegisterDto.id());
+        TransactionReceipt transactionReceipt;
 
-        TransactionReceipt transactionReceipt = proximitySensorManager
-                .registerProximitySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
-                .send();
+        // MODIFICAÇÃO: Adicionado bloco synchronized para segurança de thread
+        synchronized (adminTransactionLock) {
+            log.debug("Adquiriu o lock para enviar transação de proximidade.");
+            transactionReceipt = proximitySensorManager
+                    .registerProximitySensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                    .send();
+            log.debug("Liberou o lock após enviar transação de proximidade.");
+        }
 
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro de proximidade! Status: " + transactionReceipt.getStatus());
         }
 
-        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        log.info("Dispositivo de PROXIMIDADE registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
+
         List<ProximitySensorManager.SensorRegisteredEventResponse> events = proximitySensorManager.getSensorRegisteredEvents(transactionReceipt);
 
         if (events.isEmpty()) {
@@ -166,16 +183,23 @@ public class SensorService {
      */
     public SensorRegisterResponseDto registerTemperatureSensor(SensorRegisterDto sensorRegisterDto) throws Exception {
         log.info("Enviando transação para registrar o sensor de TEMPERATURA UID: {}", sensorRegisterDto.id());
+        TransactionReceipt transactionReceipt;
 
-        TransactionReceipt transactionReceipt = temperatureSensorManager
-                .registerTemperatureSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
-                .send();
+        // MODIFICAÇÃO: Adicionado bloco synchronized para segurança de thread
+        synchronized (adminTransactionLock) {
+            log.debug("Adquiriu o lock para enviar transação de temperatura.");
+            transactionReceipt = temperatureSensorManager
+                    .registerTemperatureSensor(sensorRegisterDto.id(), sensorRegisterDto.macAddress())
+                    .send();
+            log.debug("Liberou o lock após enviar transação de temperatura.");
+        }
 
         if (!transactionReceipt.isStatusOK()) {
             throw new RuntimeException("Falha na transação de registro de temperatura! Status: " + transactionReceipt.getStatus());
         }
 
-        // --- CAPTURANDO O EVENTO GERADO PELO CONTRATO INTELIGENTE ---
+        log.info("Dispositivo de TEMPERATURA registrado com sucesso! Hash da Transação: {}", transactionReceipt.getTransactionHash());
+
         List<TemperatureSensorManager.SensorRegisteredEventResponse> events = temperatureSensorManager.getSensorRegisteredEvents(transactionReceipt);
         if (events.isEmpty()) {
             throw new IllegalStateException("Evento de registro de temperatura não encontrado!");
@@ -208,6 +232,10 @@ public class SensorService {
                 .isHumiditySensorAuthentic(uid)
                 .send();
 
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de UMIDADE não está autenticado");
+        }
+
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
@@ -226,6 +254,10 @@ public class SensorService {
         Boolean isAuthentic = motionSensorManager
                 .isMotionSensorAuthentic(uid)
                 .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de MOVIMENTO não está autenticado");
+        }
 
         return new SensorAuthenticResponseDto(isAuthentic);
     }
@@ -246,6 +278,10 @@ public class SensorService {
                 .isProximitySensorAuthentic(uid)
                 .send();
 
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de PROXIMIDADE não está autenticado");
+        }
+
         return new SensorAuthenticResponseDto(isAuthentic);
     }
 
@@ -256,6 +292,7 @@ public class SensorService {
      * @param uid O identificador único (UID) do sensor a ser verificado.
      * @return Um DTO confirmando a autenticidade (sempre 'true' se não houver exceção).
      * @throws Exception Se a chamada ao contrato falhar.
+     * @throws RuntimeException Se o contrato retornar que o sensor não é autêntico.
      */
     public SensorAuthenticResponseDto isTemperatureSensorAuthentic(String uid) throws Exception {
         log.info("Verificando autenticidade do sensor de TEMPERATURA UID: {}", uid);
@@ -263,6 +300,10 @@ public class SensorService {
         Boolean isAuthentic = temperatureSensorManager
                 .isTemperatureSensorAuthentic(uid)
                 .send();
+
+        if (!isAuthentic) {
+            throw new RuntimeException("O sensor de TEMPERATURA não está autenticado");
+        }
 
         return new SensorAuthenticResponseDto(isAuthentic);
     }
@@ -285,7 +326,7 @@ public class SensorService {
             BigInteger registeredAtTimestamp,
             BigInteger expiresAtTimestamp) {
 
-        // Convertendo Timestamps vêm como BigInteger (uint256) para Instant
+        // Convertendo Timestamps vêm como BigInteger (uint26) para Instant
         java.time.Instant registeredAt = java.time.Instant.ofEpochSecond(registeredAtTimestamp.longValue());
         java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(expiresAtTimestamp.longValue());
 
