@@ -17,13 +17,13 @@ Este projeto consiste em uma API RESTful desenvolvida em **Java com Spring Boot*
 ### Backend
 * **Linguagem:** Java 17+
 * **Framework:** Spring Boot 3.x
-* **Comunicação com Blockchain:** Web3j
+* **Comunicação com Blockchain:** [Web3j CLI](https://github.com/LFDT-web3j/web3j-cli/releases/tag/v1.7.0)
 * **Dependências:** Spring Web, Swagger (springdoc-openapi)
 * **Build:** Maven
 
 ### Blockchain
 * **Linguagem do Contrato:** Solidity (^0.8.20)
-* **Rede de Testes:** Ganache (Nó Ethereum local)
+* **Rede de Testes:** [Ganache](https://release-assets.githubusercontent.com/github-production-release-asset/79269625/23859443-25fe-46e0-9da2-ec0bfa020718?sp=r&sv=2018-11-09&sr=b&spr=https&se=2025-08-27T21%3A32%3A53Z&rscd=attachment%3B+filename%3Dganache-2.7.1-linux-x86_64.AppImage&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2025-08-27T20%3A32%3A08Z&ske=2025-08-27T21%3A32%3A53Z&sks=b&skv=2018-11-09&sig=QRseRPCM%2FvEqrfUndl4ummNqhhMHm1%2FYB8lUYylemyY%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc1NjMyNzM3OSwibmJmIjoxNzU2MzI3MDc5LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.6cniiwgQmAASG6sMNrOTg6X124zN8NmqNGVknaIJc1g&response-content-disposition=attachment%3B%20filename%3Dganache-2.7.1-linux-x86_64.AppImage&response-content-type=application%2Foctet-stream) (Nó Ethereum local)
 * **Padrão dos Contratos:** Cada tipo de sensor possui seu próprio contrato `Manager`, que lida com o registro e a verificação de autenticidade.
 
 ## 4. Endpoints da API
